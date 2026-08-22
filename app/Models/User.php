@@ -1,32 +1,39 @@
-<?php
-
-namespace App\Models;
-
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
-{
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+/**
+     * علاقة المستخدم بالدور الخاص به (طالب، موظف، مدير...)
+     */
+    public function role()
+    {
+        return $this->belongsTo(UserRole::class, 'role_id');
+    }
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * علاقة المستخدم بمهامه اليومية
      */
-    protected function casts(): array
+    public function tasks()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Task::class);
     }
-}
+
+    /**
+     * علاقة المستخدم بالتصنيفات الملونة التي ينشئها
+     */
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * علاقة المستخدم بالجهات أو الإدارات التابعة له
+     */
+    public function entities()
+    {
+        return $this->hasMany(Entity::class);
+    }
+
+    /**
+     * علاقة المستخدم بجدول الروتين الثابت (النوم، العمل...)
+     */
+    public function routines()
+    {
+        return $this->hasMany(UserRoutine::class);
+    }
