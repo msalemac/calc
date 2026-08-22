@@ -5,3 +5,17 @@ Stack trace:
 #2 /home/gismanger/calc/artisan(10): require('/home/gismanger...')
 #3 {main}
   thrown in /home/gismanger/calc/vendor/composer/platform_check.php on line 22
+[22-Aug-2026 09:22:13 UTC] PHP Fatal error:  Uncaught RuntimeException: Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= 8.3.0". You are running 8.2.33. in /home/gismanger/calc/vendor/composer/platform_check.php:22
+Stack trace:
+#0 /home/gismanger/calc/vendor/composer/autoload_real.php(25): require()
+#1 /home/gismanger/calc/vendor/autoload.php(22): ComposerAutoloaderInitcda2add6397422fb1a2eb5b9207f1575::getLoader()
+#2 /home/gismanger/calc/artisan(10): require('/home/gismanger...')
+#3 {main}
+  thrown in /home/gismanger/calc/vendor/composer/platform_check.php on line 22
+[22-Aug-2026 09:32:56 UTC] PHP Fatal error:  Uncaught RuntimeException: Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= 8.3.0". You are running 8.2.33. in /home/gismanger/calc/vendor/composer/platform_check.php:22
+Stack trace:
+#0 /home/gismanger/calc/vendor/composer/autoload_real.php(25): require()
+#1 /home/gismanger/calc/vendor/autoload.php(22): ComposerAutoloaderInitcda2add6397422fb1a2eb5b9207f1575::getLoader()
+#2 /home/gismanger/calc/artisan(10): require('/home/gismanger...')
+#3 {main}
+  thrown in /home/gismanger/calc/vendor/composer/platform_check.php on line 22
