@@ -7,13 +7,13 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * تشغيل تغذية قاعدة البيانات الرئيسية للمشروع.
+     * تشغيل التغذية الشاملة لقاعدة بيانات المشروع.
      */
     public function run(): void
     {
-        // استدعاء مغذي الأدوار لملء الجدول تلقائياً بالأدوار والـ Prompts والنقاط
         $this->call([
             RoleSeeder::class,
+            SystemConfigSeeder::class, // استدعاء مغذي إعدادات النظام ومفاتيح الـ APIs
         ]);
     }
 }

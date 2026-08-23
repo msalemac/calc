@@ -12,6 +12,12 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- مكتبة التقويم التفاعلي FullCalendar -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    
+    <!-- تحميل مكتبة اختيار التاريخ السهلة Flatpickr وتنسيقها الأنيق -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ar.js"></script>
 
     <script>
         tailwind.config = {
@@ -27,17 +33,18 @@
         body { font-family: 'Cairo', sans-serif; }
         .fc-theme-standard td, .fc-theme-standard th { border-color: #334155 !important; }
         .fc-event { border: none !important; padding: 2px 6px; border-radius: 6px; }
+        /* تخصيص مظهر Flatpickr ليتناسب تماماً مع ألواننا الداكنة والزاهية */
+        .flatpickr-calendar { background: #0f172a !important; border: 1px solid #1e293b !important; border-radius: 16px !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5) !important; }
+        .flatpickr-day.selected { background: #4f46e5 !important; border-color: #4f46e5 !important; }
     </style>
 </head>
 <body x-data="{ darkMode: true, taskModal: false, activeTab: 'tasks' }" :class="darkMode ? 'dark' : ''" class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
 
-    <!-- شريط الواجهة الجانبية والمحتوى -->
     <div class="flex h-screen overflow-hidden">
         
         <!-- الشريط الجانبي (Sidebar) متجاوب تماماً -->
         <aside class="w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between p-6 hidden md:flex transition-colors duration-300">
             <div>
-                <!-- الشعار المميز للمنصة -->
                 <div class="flex items-center gap-3 mb-8">
                     <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-600/20">
                         <i class="ri-sparkling-fill"></i>
@@ -45,7 +52,6 @@
                     <span class="font-extrabold text-lg tracking-wide text-slate-900 dark:text-white">مساعدي الذكي</span>
                 </div>
 
-                <!-- قائمة الروابط والتنقل -->
                 <nav class="space-y-2">
                     <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-right">
                         <i class="ri-list-check-3 text-lg"></i> قائمة مهامي اليومية
@@ -56,10 +62,8 @@
                 </nav>
             </div>
 
-            <!-- معلومات حساب المستخدم ونقاط الاستهلاك في ذيل الشريط الجانبي -->
             <div class="border-t border-slate-200 dark:border-slate-800 pt-6">
                 <div class="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 rounded-2xl p-4 relative group">
-                    <!-- نظام التلميحات الفورية لنقاط الاستهلاك للـ AI -->
                     <div class="absolute top-2 left-2 group/tooltip">
                         <i class="ri-question-line text-slate-400 hover:text-indigo-500 cursor-pointer text-sm"></i>
                         <div class="absolute bottom-full left-0 mb-2 w-48 bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-xl p-3 shadow-xl opacity-0 pointer-events-none group-hover/tooltip:opacity-100 transition-opacity z-50">
@@ -75,35 +79,37 @@
             </div>
         </aside>
 
-        <!-- منطقة العمل الرئيسية للمحتوى -->
+        <!-- منطقة العمل الرئيسية -->
         <main class="flex-1 flex flex-col overflow-hidden">
             
-            <!-- شريط الرأس العلوي (Header) -->
             <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between transition-colors duration-300">
                 <div class="flex items-center gap-3">
                     <h2 class="font-bold text-lg text-slate-900 dark:text-white">أهلاً بك، {{ $user->name }}</h2>
-                    <!-- شارة دور المستخدم الملونة -->
                     <span class="px-3 py-1 text-xs font-bold rounded-full bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20 capitalize">
                         @if($role->role_name === 'student') طالب علم @elseif($role->role_name === 'manager') مدير عام @else موظف محترف @endif
                     </span>
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <!-- زر تغيير الوضع الليلي والنهاري بسلاسة -->
                     <button @click="darkMode = !darkMode" class="w-10 h-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 transition-all">
-                        <i ::class="darkMode ? 'ri-sun-line' : 'ri-moon-line'" class="text-lg"></i>
+                        <i :class="darkMode ? 'ri-sun-line' : 'ri-moon-line'" class="text-lg"></i>
                     </button>
-                    <!-- زر إضافة مهمة جديدة المتوهج والزاهي بالألوان -->
                     <button @click="taskModal = true" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/15 flex items-center gap-2 transition-all duration-300">
                         <i class="ri-add-line text-lg"></i> إضافة مهمة ذكية
                     </button>
                 </div>
             </header>
 
-            <!-- محتوى لوحة التحكم القابل للتمرير -->
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 
-                <!-- شريط النصائح اليومية التفاعلية -->
+                <!-- إشعارات النجاح أو الحفظ الخضراء المنسقة والناعمة -->
+                @if(session('success'))
+                    <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs rounded-xl p-4 flex items-center gap-2">
+                        <i class="ri-checkbox-circle-line text-lg"></i>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                @endif
+
                 <div class="bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent border border-indigo-500/15 rounded-2xl p-4 flex items-center gap-3 relative group">
                     <div class="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500 shrink-0">
                         <i class="ri-lightbulb-line text-xl"></i>
@@ -116,14 +122,13 @@
                     </div>
                 </div>
 
-                <!-- تبويب قائمة المهام اليومية -->
+                <!-- تبويب قائمة المهام اليومية مع أزرار التعديل والحذف والطباعة والمشاركة -->
                 <div x-show="activeTab === 'tasks'" class="space-y-4">
                     <div class="flex items-center justify-between">
                         <h3 class="font-extrabold text-md text-slate-900 dark:text-white">قائمة المهام والجدول اليومي</h3>
                         <span class="text-xs text-slate-500">إجمالي المهام المتبقية: {{ $tasks->where('status', 'pending')->count() }} مهمة</span>
                     </div>
 
-                    <!-- عرض كروت المهام الفعلية -->
                     @if($tasks->isEmpty())
                         <div class="text-center py-16 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
                             <i class="ri-folder-open-line text-5xl text-slate-400 mb-3 block"></i>
@@ -132,10 +137,9 @@
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @foreach($tasks as $task)
-                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 relative group transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-lg">
+                                <div id="task-card-{{ $task->id }}" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 relative group transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-lg">
                                     <div class="flex items-start justify-between mb-3">
                                         <div class="flex items-center gap-2">
-                                            <!-- لون التصنيف المخصص إن وجد -->
                                             <span class="w-3 h-3 rounded-full" style="background-color: {{ $task->category->color_code ?? '#3B82F6' }}"></span>
                                             <h4 class="font-bold text-sm text-slate-900 dark:text-white">{{ $task->title }}</h4>
                                         </div>
@@ -148,9 +152,26 @@
                                             <span><i class="ri-time-line mr-1"></i> {{ $task->estimated_duration }} دقيقة</span>
                                             <span><i class="ri-calendar-line mr-1"></i> {{ $task->due_date->format('Y/m/d h:i A') }}</span>
                                         </div>
-                                        @if($task->entity)
-                                            <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500 text-[10px] font-bold">{{ $task->entity->title }}</span>
-                                        @endif
+                                        
+                                        <!-- الأزرار التفاعلية المجمعة في ذيل الكارت -->
+                                        <div class="flex items-center gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <!-- زر التعديل (Edit) -->
+                                            <button onclick="editTask({{ $task->id }})" class="w-7 h-7 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="تعديل المهمة">
+                                                <i class="ri-edit-line text-xs"></i>
+                                            </button>
+                                            <!-- زر الطباعة / تصدير PDF للمهمة -->
+                                            <button onclick="printTask('{{ $task->title }}', '{{ $task->description }}')" class="w-7 h-7 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="طباعة / تصدير PDF">
+                                                <i class="ri-printer-line text-xs"></i>
+                                            </button>
+                                            <!-- زر مشاركة المهمة (Share API) لفتح الـ WhatsApp أو غيره -->
+                                            <button onclick="shareTask('{{ $task->title }}', '{{ $task->description }}')" class="w-7 h-7 bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="مشاركة المهمة">
+                                                <i class="ri-share-line text-xs"></i>
+                                            </button>
+                                            <!-- زر الحذف السريع والآمن (Delete) -->
+                                            <button onclick="deleteTask({{ $task->id }})" class="w-7 h-7 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="حذف المهمة">
+                                                <i class="ri-delete-bin-line text-xs"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -186,9 +207,10 @@
         </main>
     </div>
 
-    <!-- نافذة إضافة مهمة جديدة المنبثقة (Task Modal) -->
+    <!-- نافذة إضافة مهمة جديدة المنبثقة -->
     <div x-show="taskModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" x-transition>
-        <div @click.away="taskModal = false" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative text-right">
+        <!-- حذف خاصية الإغلاق عند الضغط بالخارج لتجنب تعارض تحديد التاريخ والوقت والحفاظ على نصوص المستخدم -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative text-right">
             
             <div class="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h3 class="font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -197,14 +219,14 @@
                 <button @click="taskModal = false" class="text-slate-400 hover:text-slate-500"><i class="ri-close-line text-2xl"></i></button>
             </div>
 
-            <!-- نموذج إضافة المهمة الفعلي -->
-            <form action="#" method="POST" class="space-y-4">
+            <!-- نموذج إضافة المهمة الفعلي الموجه للمتحكم لحفظ البيانات -->
+            <form action="{{ route('tasks.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
                     <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">عنوان المهمة الأساسي</label>
                     <div class="relative">
                         <input type="text" name="title" required placeholder="مثال: مراجعة ميزانية الربع الأول" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white">
-                        <!-- أيقونة الإدخال الصوتي المتوهجة والزاهية للمهمة -->
+                        <!-- أيقونة الإدخال الصوتي المتوهجة للمهمة -->
                         <button type="button" class="absolute left-3 top-3 text-slate-400 hover:text-indigo-500 transition-colors">
                             <i class="ri-mic-line text-lg"></i>
                         </button>
@@ -232,9 +254,13 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
+                    <!-- حقل التاريخ المطور والسهل عبر Flatpickr -->
                     <div>
                         <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">تاريخ ووقت التسليم</label>
-                        <input type="datetime-local" name="due_date" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white">
+                        <div class="relative">
+                            <input type="text" id="due_date_input" name="due_date" required placeholder="اختر الموعد" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white cursor-pointer">
+                            <i class="ri-calendar-event-line absolute left-3 top-3 text-slate-400 pointer-events-none"></i>
+                        </div>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">التصنيف الملون للمهمة</label>
@@ -247,7 +273,6 @@
                     </div>
                 </div>
 
-                <!-- تفريغ الحقول المخصصة ديناميكياً بناءً على دور المستخدم الحالي من جدول الأدوار -->
                 @if($role->custom_fields_schema)
                     @php
                         $customFields = json_decode($role->custom_fields_schema, true);
@@ -286,5 +311,66 @@
         </div>
     </div>
 
+    <!-- كود الجافا سكريبت لتفعيل Flatpickr وأزرار المتابعة والطباعة والمشاركة الذكية -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. تفعيل محرك اختيار التاريخ والوقت السهل والداكن باللغة العربية داخل نافذة المهمة
+            flatpickr("#due_date_input", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                locale: "ar",
+                theme: "dark",
+                minDate: "today",
+                time_24hr: false,
+                static: true // تفعيل التوليد الموضعي لحل مشكلة تعارض AlpineJS
+            });
+        });
+
+        // 2. ميزة طباعة وتصدير المهمة الفردية المنسقة
+        function printTask(title, description) {
+            var printWindow = window.open('', '_blank');
+            printWindow.document.write('<html lang="ar" dir="rtl"><head><title>طباعة مهمة</title>');
+            printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;400&display=swap" rel="stylesheet">');
+            printWindow.document.write('<style>body{font-family:\'Cairo\',sans-serif;padding:40px;color:#333;line-height:1.6;}.card{border:2px solid #333;padding:24px;border-radius:12px;max-width:600px;margin:auto;}h1{margin-top:0;color:#1e3a8a;border-bottom:1px solid #ccc;padding-bottom:12px;}</style></head><body>');
+            printWindow.document.write('<div class="card"><h1>' + title + '</h1><p>' + (description ? description : 'لا توجد تفاصيل إضافية مكتوبة لهذه المهمة.') + '</p></div>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            setTimeout(function() {
+                printWindow.print();
+            }, 500);
+        }
+
+        // 3. ميزة مشاركة تفاصيل المهمة عبر الهواتف والكمبيوتر (Web Share API)
+        function shareTask(title, description) {
+            var text = 'المهمة الذكية: ' + title + '\nالتفاصيل: ' + (description ? description : 'لا توجد تفاصيل إضافية.');
+            
+            // التحقق من دعم المتصفح لميزة المشاركة الأصلية (تثبت روعتها على الجوال)
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: text,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                // بديل ممتاز: نسخ تفاصيل المهمة التلقائي للحافظة وتنبيه الأدمن
+                navigator.clipboard.writeText(text).then(function() {
+                    alert('تم نسخ تفاصيل المهمة إلى الحافظة تلقائياً! يمكنك لصقها الآن في الواتساب أو أي تطبيق آخر.');
+                }, function(err) {
+                    console.error('فشل النسخ تلقائياً: ', err);
+                });
+            }
+        }
+
+        // 4. حجز دوال فارغة مؤقتاً للتعديل والحذف لحين برمجتها في الخطوة القادمة
+        function editTask(id) {
+            alert('ميزة التعديل السريع قيد التطوير وستعمل بكفاءة في الخطوة التالية!');
+        }
+
+        function deleteTask(id) {
+            if(confirm('هل أنت متأكد من رغبتك في حذف هذه المهمة من جدولك اليومي؟')) {
+                alert('ميزة الحذف السريع قيد التطوير في الخطوة التالية!');
+            }
+        }
+    </script>
 </body>
 </html>
