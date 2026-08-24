@@ -27,14 +27,11 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // محاولة تسجيل الدخول وحفظ خيار "تذكرني"
         if (Auth::attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
-            // توجيه المستخدم لصفحة لوحة التحكم مباشرة
             return redirect()->intended('dashboard');
         }
 
-        // في حال فشل الدخول، العودة مع رسالة تنبيه ودية
         return back()->withErrors([
             'email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
         ])->onlyInput('email');
@@ -59,18 +56,42 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // إنشاء المستخدم وتشفير كلمة المرور بأمان عالي
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        // تسجيل الدخول تلقائياً للمستخدم الجديد
         Auth::login($user);
 
-        // توجيهه فوراً للوحة التحكم لتبدأ مرحلة اختيار دوره الترحيبية
         return redirect()->route('dashboard');
+    }
+
+    /**
+     * تحديث بيانات الملف الشخصي وكلمة المرور للمستخدم ديناميكياً بأمان.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        // التحقق من صحة البيانات (البريد يجب أن يكون فريداً باستثناء إيميل المستخدم الحالي نفسه)
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        // تعديل كلمة المرور فقط في حال قام المستخدم بكتابة باسورداً جديداً
+        if (!empty($request->password)) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return back()->with('success', 'تم تحديث بيانات ملفك الشخصي وكلمة المرور الخاصة بك بنجاح!');
     }
 
     /**

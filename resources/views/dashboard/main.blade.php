@@ -33,12 +33,11 @@
         body { font-family: 'Cairo', sans-serif; }
         .fc-theme-standard td, .fc-theme-standard th { border-color: #334155 !important; }
         .fc-event { border: none !important; padding: 2px 6px; border-radius: 6px; }
-        /* تخصيص مظهر Flatpickr ليتناسب تماماً مع ألواننا الداكنة والزاهية */
         .flatpickr-calendar { background: #0f172a !important; border: 1px solid #1e293b !important; border-radius: 16px !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5) !important; }
         .flatpickr-day.selected { background: #4f46e5 !important; border-color: #4f46e5 !important; }
     </style>
 </head>
-<body x-data="{ darkMode: true, taskModal: false, activeTab: 'tasks' }" :class="darkMode ? 'dark' : ''" class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
+<body x-data="{ darkMode: true, taskModal: false, profileModal: false, activeTab: 'tasks' }" :class="darkMode ? 'dark' : ''" class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
 
     <div class="flex h-screen overflow-hidden">
         
@@ -90,10 +89,16 @@
                     </span>
                 </div>
 
-                <div class="flex items-center gap-4">
-                    <button @click="darkMode = !darkMode" class="w-10 h-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 transition-all">
+                <div class="flex items-center gap-3">
+                    <!-- زر إعدادات الملف الشخصي وتغيير الباسورد والأمان الفخم المدمج بالرأس -->
+                    <button @click="profileModal = true" class="w-10 h-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 transition-all" title="إعدادات الحساب وكلمة المرور">
+                        <i class="ri-user-settings-line text-lg"></i>
+                    </button>
+                    <!-- زر تغيير الوضع الليلي والنهاري -->
+                    <button @click="darkMode = !darkMode" class="w-10 h-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 transition-all" title="تغيير المظهر">
                         <i :class="darkMode ? 'ri-sun-line' : 'ri-moon-line'" class="text-lg"></i>
                     </button>
+                    <!-- زر إضافة مهمة جديدة -->
                     <button @click="taskModal = true" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/15 flex items-center gap-2 transition-all duration-300">
                         <i class="ri-add-line text-lg"></i> إضافة مهمة ذكية
                     </button>
@@ -102,7 +107,6 @@
 
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
                 
-                <!-- إشعارات النجاح أو الحفظ الخضراء المنسقة والناعمة -->
                 @if(session('success'))
                     <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs rounded-xl p-4 flex items-center gap-2">
                         <i class="ri-checkbox-circle-line text-lg"></i>
@@ -122,7 +126,7 @@
                     </div>
                 </div>
 
-                <!-- تبويب قائمة المهام اليومية مع أزرار التعديل والحذف والطباعة والمشاركة -->
+                <!-- تبويب المهام -->
                 <div x-show="activeTab === 'tasks'" class="space-y-4">
                     <div class="flex items-center justify-between">
                         <h3 class="font-extrabold text-md text-slate-900 dark:text-white">قائمة المهام والجدول اليومي</h3>
@@ -153,21 +157,16 @@
                                             <span><i class="ri-calendar-line mr-1"></i> {{ $task->due_date->format('Y/m/d h:i A') }}</span>
                                         </div>
                                         
-                                        <!-- الأزرار التفاعلية المجمعة في ذيل الكارت -->
                                         <div class="flex items-center gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <!-- زر التعديل (Edit) -->
                                             <button onclick="editTask({{ $task->id }})" class="w-7 h-7 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="تعديل المهمة">
                                                 <i class="ri-edit-line text-xs"></i>
                                             </button>
-                                            <!-- زر الطباعة / تصدير PDF للمهمة -->
                                             <button onclick="printTask('{{ $task->title }}', '{{ $task->description }}')" class="w-7 h-7 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="طباعة / تصدير PDF">
                                                 <i class="ri-printer-line text-xs"></i>
                                             </button>
-                                            <!-- زر مشاركة المهمة (Share API) لفتح الـ WhatsApp أو غيره -->
                                             <button onclick="shareTask('{{ $task->title }}', '{{ $task->description }}')" class="w-7 h-7 bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="مشاركة المهمة">
                                                 <i class="ri-share-line text-xs"></i>
                                             </button>
-                                            <!-- زر الحذف السريع والآمن (Delete) -->
                                             <button onclick="deleteTask({{ $task->id }})" class="w-7 h-7 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="حذف المهمة">
                                                 <i class="ri-delete-bin-line text-xs"></i>
                                             </button>
@@ -179,7 +178,7 @@
                     @endif
                 </div>
 
-                <!-- تبويب التقويم التفاعلي الكامل -->
+                <!-- تبويب التقويم -->
                 <div x-show="activeTab === 'calendar'" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 transition-colors duration-300" x-init="
                     setTimeout(() => {
                         var calendarEl = document.getElementById('calendar');
@@ -209,7 +208,6 @@
 
     <!-- نافذة إضافة مهمة جديدة المنبثقة -->
     <div x-show="taskModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" x-transition>
-        <!-- حذف خاصية الإغلاق عند الضغط بالخارج لتجنب تعارض تحديد التاريخ والوقت والحفاظ على نصوص المستخدم -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative text-right">
             
             <div class="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -219,14 +217,12 @@
                 <button @click="taskModal = false" class="text-slate-400 hover:text-slate-500"><i class="ri-close-line text-2xl"></i></button>
             </div>
 
-            <!-- نموذج إضافة المهمة الفعلي الموجه للمتحكم لحفظ البيانات -->
             <form action="{{ route('tasks.store') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
                     <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">عنوان المهمة الأساسي</label>
                     <div class="relative">
                         <input type="text" name="title" required placeholder="مثال: مراجعة ميزانية الربع الأول" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white">
-                        <!-- أيقونة الإدخال الصوتي المتوهجة للمهمة -->
                         <button type="button" class="absolute left-3 top-3 text-slate-400 hover:text-indigo-500 transition-colors">
                             <i class="ri-mic-line text-lg"></i>
                         </button>
@@ -254,7 +250,6 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <!-- حقل التاريخ المطور والسهل عبر Flatpickr -->
                     <div>
                         <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">تاريخ ووقت التسليم</label>
                         <div class="relative">
@@ -311,10 +306,82 @@
         </div>
     </div>
 
+    <!-- نافذة إعدادات الملف الشخصي وتغيير الباسورد المنبثقة التفاعلية الفخمة -->
+    <div x-show="profileModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" x-transition>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-right">
+            
+            <div class="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h3 class="font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="ri-user-settings-line text-indigo-500"></i> إعدادات الحساب والأمان
+                </h3>
+                <button @click="profileModal = false" class="text-slate-400 hover:text-slate-500"><i class="ri-close-line text-2xl"></i></button>
+            </div>
+
+            <!-- نموذج تحديث بيانات المستخدم وتعديل الباسورد -->
+            <form action="{{ route('profile.update') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">الاسم الكامل</label>
+                    <div class="relative">
+                        <input type="text" name="name" value="{{ $user->name }}" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white pr-10">
+                        <i class="ri-user-line absolute right-3 top-3.5 text-slate-400 text-lg"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">البريد الإلكتروني</label>
+                    <div class="relative">
+                        <input type="email" name="email" value="{{ $user->email }}" required class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white pr-10">
+                        <i class="ri-mail-line absolute right-3 top-3.5 text-slate-400 text-lg"></i>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 dark:border-slate-800/80 pt-4">
+                    <span class="text-xs text-indigo-500 font-bold block mb-3"><i class="ri-lock-password-line"></i> تغيير كلمة المرور (اكتبها فقط في حال الرغبة في التغيير):</span>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">كلمة المرور الجديدة</label>
+                            <div class="relative">
+                                <input type="password" name="password" placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white pr-10">
+                                <i class="ri-lock-line absolute right-3 top-3.5 text-slate-400 text-lg"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">تأكيد كلمة المرور الجديدة</label>
+                            <div class="relative">
+                                <input type="password" name="password_confirmation" placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white pr-10">
+                                <i class="ri-lock-check-line absolute right-3 top-3.5 text-slate-400 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                    <!-- نموذج تسجيل الخروج المنسق بالأحمر البراق المدمج تفاعلياً بالأدنى -->
+                    <button type="button" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="px-4 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                        <i class="ri-logout-box-line"></i> تسجيل الخروج
+                    </button>
+                    
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="profileModal = false" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-200 transition-all">إلغاء</button>
+                        <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-600/15 transition-all">حفظ التغييرات <i class="ri-save-line mr-1"></i></button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- نموذج تسجيل الخروج المخفي اللازم لإرسال طلب الـ POST بأمان -->
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                @csrf
+            </form>
+
+        </div>
+    </div>
+
     <!-- كود الجافا سكريبت لتفعيل Flatpickr وأزرار المتابعة والطباعة والمشاركة الذكية -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 1. تفعيل محرك اختيار التاريخ والوقت السهل والداكن باللغة العربية داخل نافذة المهمة
             flatpickr("#due_date_input", {
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
@@ -322,11 +389,10 @@
                 theme: "dark",
                 minDate: "today",
                 time_24hr: false,
-                static: true // تفعيل التوليد الموضعي لحل مشكلة تعارض AlpineJS
+                static: true
             });
         });
 
-        // 2. ميزة طباعة وتصدير المهمة الفردية المنسقة
         function printTask(title, description) {
             var printWindow = window.open('', '_blank');
             printWindow.document.write('<html lang="ar" dir="rtl"><head><title>طباعة مهمة</title>');
@@ -340,11 +406,9 @@
             }, 500);
         }
 
-        // 3. ميزة مشاركة تفاصيل المهمة عبر الهواتف والكمبيوتر (Web Share API)
         function shareTask(title, description) {
             var text = 'المهمة الذكية: ' + title + '\nالتفاصيل: ' + (description ? description : 'لا توجد تفاصيل إضافية.');
             
-            // التحقق من دعم المتصفح لميزة المشاركة الأصلية (تثبت روعتها على الجوال)
             if (navigator.share) {
                 navigator.share({
                     title: title,
@@ -352,7 +416,6 @@
                     url: window.location.href
                 }).catch(console.error);
             } else {
-                // بديل ممتاز: نسخ تفاصيل المهمة التلقائي للحافظة وتنبيه الأدمن
                 navigator.clipboard.writeText(text).then(function() {
                     alert('تم نسخ تفاصيل المهمة إلى الحافظة تلقائياً! يمكنك لصقها الآن في الواتساب أو أي تطبيق آخر.');
                 }, function(err) {
@@ -361,7 +424,6 @@
             }
         }
 
-        // 4. حجز دوال فارغة مؤقتاً للتعديل والحذف لحين برمجتها في الخطوة القادمة
         function editTask(id) {
             alert('ميزة التعديل السريع قيد التطوير وستعمل بكفاءة في الخطوة التالية!');
         }
