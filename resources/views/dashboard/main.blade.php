@@ -31,13 +31,52 @@
     </script>
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        .fc-theme-standard td, .fc-theme-standard th { border-color: #334155 !important; }
-        .fc-event { border: none !important; padding: 2px 6px; border-radius: 6px; }
+        
+        /* التنسيق الافتراضي للتقويم في الوضع العادي */
+        .fc-theme-standard td, .fc-theme-standard th { border-color: #e2e8f0 !important; }
+        .fc-event { border: none !important; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
+        .fc-daygrid-day-number, .fc-col-header-cell-cushion { text-decoration: none !important; color: #1e293b !important; }
+
+        /* تخصيص مظهر Flatpickr ليتناسب تماماً مع ألواننا الداكنة والزاهية */
         .flatpickr-calendar { background: #0f172a !important; border: 1px solid #1e293b !important; border-radius: 16px !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5) !important; }
         .flatpickr-day.selected { background: #4f46e5 !important; border-color: #4f46e5 !important; }
+
+        /* ==================================================== */
+        /* تخصيص مظهر التقويم الاحترافي بالكامل في الوضع الليلي (Dark Mode) */
+        /* ==================================================== */
+        .dark .fc {
+            color: #f8fafc !important; /* لون النص الأساسي أبيض ثلجي */
+        }
+        .dark .fc-col-header-cell-cushion, 
+        .dark .fc-daygrid-day-number,
+        .dark .fc-daygrid-day-top {
+            color: #cbd5e1 !important; /* أرقام الأيام وأسماء الأسبوع بلون فضي ناصع مريح للعين */
+            text-decoration: none !important;
+        }
+        .dark .fc-button {
+            background-color: #1e293b !important; /* أزرار التقويم بلون كحلي داكن متناسق مع بطاقاتنا */
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+            text-transform: capitalize;
+        }
+        .dark .fc-button-active {
+            background-color: #4f46e5 !important; /* زر اليوم الحالي النشط باللون البنفسجي الزاهي */
+            border-color: #4f46e5 !important;
+        }
+        .dark .fc-theme-standard td, 
+        .dark .fc-theme-standard th {
+            border-color: #1e293b !important; /* تفتيح وتبسيط حدود شبكة التقويم بلون هادئ */
+        }
+        .dark .fc-day-today {
+            background-color: rgba(79, 70, 229, 0.15) !important; /* تظليل ناعم لليوم الحالي باللون البنفسجي */
+        }
+        .dark .fc-daygrid-day:hover {
+            background-color: rgba(255, 255, 255, 0.02) !important; /* تأثير تمرير خفيف جداً فوق الأيام */
+        }
     </style>
 </head>
-<body x-data="{ darkMode: true, taskModal: false, profileModal: false, activeTab: 'tasks' }" :class="darkMode ? 'dark' : ''" class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
+<!-- دمج متغير detailModal لفتح وإغلاق نافذة تفاصيل كروت التقويم -->
+<body x-data="{ darkMode: true, taskModal: false, profileModal: false, detailModal: false, activeTab: 'tasks', selectedTask: {} }" :class="darkMode ? 'dark' : ''" class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
 
     <div class="flex h-screen overflow-hidden">
         
@@ -55,7 +94,7 @@
                     <button @click="activeTab = 'tasks'" :class="activeTab === 'tasks' ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-right">
                         <i class="ri-list-check-3 text-lg"></i> قائمة مهامي اليومية
                     </button>
-                    <button @click="activeTab = 'calendar'" :class="activeTab === 'calendar' ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-right">
+                    <button @click="activeTab = 'calendar'; setTimeout(() => { if(window.calendar) { window.calendar.updateSize(); } }, 150);" :class="activeTab === 'calendar' ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-right">
                         <i class="ri-calendar-todo-line text-lg"></i> تقويمي التفاعلي
                     </button>
                 </nav>
@@ -90,15 +129,12 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <!-- زر إعدادات الملف الشخصي وتغيير الباسورد والأمان الفخم المدمج بالرأس -->
                     <button @click="profileModal = true" class="w-10 h-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 transition-all" title="إعدادات الحساب وكلمة المرور">
                         <i class="ri-user-settings-line text-lg"></i>
                     </button>
-                    <!-- زر تغيير الوضع الليلي والنهاري -->
                     <button @click="darkMode = !darkMode" class="w-10 h-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700/80 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 transition-all" title="تغيير المظهر">
                         <i :class="darkMode ? 'ri-sun-line' : 'ri-moon-line'" class="text-lg"></i>
                     </button>
-                    <!-- زر إضافة مهمة جديدة -->
                     <button @click="taskModal = true" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/15 flex items-center gap-2 transition-all duration-300">
                         <i class="ri-add-line text-lg"></i> إضافة مهمة ذكية
                     </button>
@@ -126,7 +162,7 @@
                     </div>
                 </div>
 
-                <!-- تبويب المهام -->
+                <!-- تبويب المهام اليومية -->
                 <div x-show="activeTab === 'tasks'" class="space-y-4">
                     <div class="flex items-center justify-between">
                         <h3 class="font-extrabold text-md text-slate-900 dark:text-white">قائمة المهام والجدول اليومي</h3>
@@ -149,7 +185,7 @@
                                         </div>
                                         <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 uppercase">{{ $task->priority }}</span>
                                     </div>
-                                    <p class="text-xs text-slate-500 leading-relaxed mb-4">{{ $task->description ?? 'لا توجد تفاصيل إضافية مكتوبة.' }}</p>
+                                    <p class="text-xs text-slate-500 leading-relaxed mb-4" style="white-space: pre-line;">{{ $task->description ?? 'لا توجد تفاصيل إضافية مكتوبة.' }}</p>
                                     
                                     <div class="flex items-center justify-between text-xs text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-3">
                                         <div class="flex items-center gap-3">
@@ -158,15 +194,23 @@
                                         </div>
                                         
                                         <div class="flex items-center gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <!-- زر التأجيل الذكي (سهم أصفر ملتف للأمام) لليوم التالي -->
+                                            <a href="{{ route('tasks.postpone', $task->id) }}" class="w-7 h-7 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="تأجيل المهمة للغد">
+                                                <i class="ri-arrow-go-forward-line text-xs"></i>
+                                            </a>
+                                            <!-- زر التعديل (Edit) -->
                                             <button onclick="editTask({{ $task->id }})" class="w-7 h-7 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="تعديل المهمة">
                                                 <i class="ri-edit-line text-xs"></i>
                                             </button>
+                                            <!-- زر الطباعة / تصدير PDF للمهمة -->
                                             <button onclick="printTask('{{ $task->title }}', '{{ $task->description }}')" class="w-7 h-7 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="طباعة / تصدير PDF">
                                                 <i class="ri-printer-line text-xs"></i>
                                             </button>
+                                            <!-- زر مشاركة المهمة (Share API) لفتح الـ WhatsApp أو غيره -->
                                             <button onclick="shareTask('{{ $task->title }}', '{{ $task->description }}')" class="w-7 h-7 bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="مشاركة المهمة">
                                                 <i class="ri-share-line text-xs"></i>
                                             </button>
+                                            <!-- زر الحذف السريع والآمن (Delete) -->
                                             <button onclick="deleteTask({{ $task->id }})" class="w-7 h-7 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="حذف المهمة">
                                                 <i class="ri-delete-bin-line text-xs"></i>
                                             </button>
@@ -178,7 +222,7 @@
                     @endif
                 </div>
 
-                <!-- تبويب التقويم -->
+                <!-- تبويب التقويم مضاف إليه حدث الضغط التفاعلي لعرض التفاصيل -->
                 <div x-show="activeTab === 'calendar'" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 transition-colors duration-300" x-init="
                     setTimeout(() => {
                         var calendarEl = document.getElementById('calendar');
@@ -186,17 +230,38 @@
                             initialView: 'dayGridMonth',
                             locale: 'ar',
                             direction: 'rtl',
+                            contentHeight: 'auto',
+                            aspectRatio: 1.35,
                             events: [
                                 @foreach($tasks as $task)
                                 {
+                                    id: '{{ $task->id }}',
                                     title: '{{ $task->title }}',
                                     start: '{{ $task->due_date->format('Y-m-d\TH:i:s') }}',
-                                    backgroundColor: '{{ $task->category->color_code ?? '#3B82F6' }}'
+                                    backgroundColor: '{{ $task->category->color_code ?? '#3B82F6' }}',
+                                    // تمرير الخصائص الممتدة للذكاء الاصطناعي والواجهة لقراءتها عند الضغط
+                                    extendedProps: {
+                                        description: '{{ addslashes(str_replace(["\r", "\n"], ' ', $task->description)) }}',
+                                        priority: '{{ $task->priority }}',
+                                        due_date: '{{ $task->due_date->format('Y/m/d h:i A') }}'
+                                    }
                                 },
                                 @endforeach
-                            ]
+                            ],
+                            // برمجة تفاعلية الضغط على الحدث لفتح نافذة التفاصيل الفورية لتقويم الأدمن والطلاب
+                            eventClick: function(info) {
+                                selectedTask = {
+                                    id: info.event.id,
+                                    title: info.event.title,
+                                    description: info.event.extendedProps.description,
+                                    priority: info.event.extendedProps.priority,
+                                    due_date: info.event.extendedProps.due_date
+                                };
+                                detailModal = true;
+                            }
                         });
                         calendar.render();
+                        window.calendar = calendar;
                     }, 100);
                 ">
                     <div id="calendar" class="text-sm"></div>
@@ -317,7 +382,6 @@
                 <button @click="profileModal = false" class="text-slate-400 hover:text-slate-500"><i class="ri-close-line text-2xl"></i></button>
             </div>
 
-            <!-- نموذج تحديث بيانات المستخدم وتعديل الباسورد -->
             <form action="{{ route('profile.update') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
@@ -359,7 +423,6 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                    <!-- نموذج تسجيل الخروج المنسق بالأحمر البراق المدمج تفاعلياً بالأدنى -->
                     <button type="button" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="px-4 py-2.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
                         <i class="ri-logout-box-line"></i> تسجيل الخروج
                     </button>
@@ -371,10 +434,53 @@
                 </div>
             </form>
 
-            <!-- نموذج تسجيل الخروج المخفي اللازم لإرسال طلب الـ POST بأمان -->
             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                 @csrf
             </form>
+
+        </div>
+    </div>
+
+    <!-- نافذة منبثقة تفاعلية جديدة لعرض تفاصيل المهمة عند الضغط عليها في التقويم -->
+    <div x-show="detailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" x-transition>
+        <div @click.away="detailModal = false" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-right">
+            
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-extrabold text-md text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="ri-information-line text-indigo-500"></i> تفاصيل المهمة المجدولة
+                </h3>
+                <button @click="detailModal = false" class="text-slate-400 hover:text-slate-500"><i class="ri-close-line text-2xl"></i></button>
+            </div>
+
+            <!-- عرض تفاصيل المهمة ديناميكياً بناءً على ما نقر عليه المستخدم في التقويم -->
+            <div class="space-y-4 mb-6">
+                <div>
+                    <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500" x-text="selectedTask.priority"></span>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white mt-2" x-text="selectedTask.title"></h2>
+                </div>
+                
+                <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                    <p class="text-xs text-slate-500 leading-relaxed" style="white-space: pre-line;" x-text="selectedTask.description ? selectedTask.description : 'لا توجد تفاصيل إضافية مكتوبة لهذه المهمة.'"></p>
+                </div>
+
+                <div class="flex items-center gap-4 text-xs text-slate-400">
+                    <span><i class="ri-calendar-line mr-1 text-indigo-500"></i> تاريخ الاستحقاق: <span class="text-slate-900 dark:text-white font-bold" x-text="selectedTask.due_date"></span></span>
+                </div>
+            </div>
+
+            <!-- الإجراءات المتاحة للمهمة من داخل التقويم المطور -->
+            <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                <!-- زر الحذف المباشر من التقويم -->
+                <button @click="detailModal = false; deleteTask(selectedTask.id);" class="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all">
+                    <i class="ri-delete-bin-line"></i> حذف المهمة
+                </button>
+                
+                <div class="flex items-center gap-2">
+                    <button @click="detailModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-200 transition-all">إغلاق</button>
+                    <!-- زر التعديل المباشر من التقويم -->
+                    <button @click="detailModal = false; editTask(selectedTask.id);" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-600/15 transition-all">تعديل التفاصيل <i class="ri-edit-line mr-1"></i></button>
+                </div>
+            </div>
 
         </div>
     </div>
