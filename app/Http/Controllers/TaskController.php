@@ -11,7 +11,7 @@ use Carbon\Carbon;
 class TaskController extends Controller
 {
     /**
-     * استقبال وحفظ المهمة الجديدة للمستخدم في قاعدة البيانات MySQL.
+     * حفظ المهمة الجديدة في قاعدة البيانات MySQL.
      */
     public function store(Request $request)
     {
@@ -50,26 +50,19 @@ class TaskController extends Controller
         $user = Auth::user();
         $task = Task::where('user_id', $user->id)->findOrFail($id);
 
-        // حساب تاريخ الغد (اليوم المستهدف للتأجيل)
         $tomorrow = Carbon::parse($task->due_date)->addDay();
 
-        // 1. جلب مهام الغد المفتوحة للتحقق من ضغط العمل
         $tomorrowTasks = Task::where('user_id', $user->id)
                              ->whereDate('due_date', $tomorrow)
                              ->where('status', 'pending')
                              ->get();
 
-        // حساب مجموع الدقائق لمهام الغد
         $totalDuration = $tomorrowTasks->sum('estimated_duration');
 
-        // 2. التحقق: إذا كان يوم الغد فارغاً (مجموع المهام أقل من 4 ساعات / 240 دقيقة)
         if ($totalDuration <= 240) {
-            
-            // زيادة عداد التأجيل بمقدار 1
             $task->postpone_count += 1;
             $task->due_date = $tomorrow;
             
-            // تفعيل منقذ التسويف تلقائياً إذا وصل التأجيل لـ 3 مرات متتالية
             if ($task->postpone_count >= 3) {
                 $task->description = "🚨 [منبه منقذ التسويف]: تم تأجيل هذه المهمة 3 مرات متتالية. نقترح العمل عليها فوراً وتفكيكها لخطوات بسيطة جداً لا تتجاوز 10 دقائق لتجاوز جمود البدايات!\n\n" . $task->description;
             }
@@ -84,9 +77,8 @@ class TaskController extends Controller
             return redirect()->route('dashboard')->with('success', $msg);
         }
 
-        // 3. في حال وجود ضغط عمل (ازدحام) ◄ استدعاء عقل الذكاء الاصطناعي لحل التعارض
         $systemPrompt = $user->role->system_prompt ?? 'أنت مساعد إنتاجية شخصي ذكي.';
-        $routines = $user->routines; // جلب الروتين الثابت كحظر وقت
+        $routines = $user->routines; 
 
         $aiResult = $aiService->resolveConflict(
             $user->role->role_name,
@@ -101,7 +93,6 @@ class TaskController extends Controller
             return view('dashboard.conflict', compact('task', 'suggestions', 'tomorrow'));
         }
 
-        // في حال فشل الـ API لأي سبب، نقوم بالتأجيل التقليدي الاحتياطي لتجنب توقف التطبيق
         $task->due_date = $tomorrow;
         $task->save();
 
@@ -123,12 +114,10 @@ class TaskController extends Controller
             'tomorrow_date' => 'required|date',
         ]);
 
-        // زيادة عداد التأجيل بمقدار 1 وحفظ التاريخ الجديد
         $task->postpone_count += 1;
         $task->due_date = $request->tomorrow_date;
         $task->status = 'postponed';
 
-        // دمج وحفظ اقتراح الذكاء الاصطناعي المختار داخل وصف المهمة ليرى المستخدم خطته على الكارت فوراً!
         if ($request->suggestion_type !== 'manual') {
             $task->description = "✨ [تم تطبيق الحل الذكي: " . $request->suggestion_title . "]\n" . 
                                  "الخطة: " . $request->suggestion_desc . "\n\n" . 
@@ -142,5 +131,47 @@ class TaskController extends Controller
             : 'تم بنجاح تطبيق واعتماد خيار الجدولة البديلة الذكي المختار لجدول الغد!';
 
         return redirect()->route('dashboard')->with('success', $msg);
+    }
+
+    /**
+     * استقبال الملف الصوتي المرفوع، تحويله لنص، واستخلاص بيانات المهمة ديناميكياً (AI Voice-to-Task).
+     */
+    public function transcribeVoice(Request $request, AIService $aiService)
+    {
+        // التحقق من أن الملف الصوتي مرفوع وبحجم لا يتجاوز 10 ميجابايت لسرعة المعالجة
+        $request->validate([
+            'audio' => 'required|file|max:10240', 
+        ]);
+
+        $user = Auth::user();
+        $audioFile = $request->file('audio');
+
+        // 1. جلب المسار المؤقت للملف الصوتي على السيرفر لإرساله لـ Whisper
+        $tempPath = $audioFile->getPathname();
+
+        // 2. معالجة وترجمة الملف الصوتي عبر Whisper API
+        $transcription = $aiService->transcribeAudio($tempPath);
+
+        if (!$transcription['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $transcription['text']
+            ], 400);
+        }
+
+        $text = $transcription['text'];
+
+        // 3. استخلاص بيانات المهمة المنظمة (JSON) من النص المترجم عبر نموذج GPT-4o-mini المخصص للدور
+        $extractedTask = $aiService->extractTaskFromText($text, $user->role->role_name);
+
+        if (!$extractedTask['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'فشل الذكاء الاصطناعي في هيكلة واستخلاص بيانات المهمة من النص المترجم.'
+            ], 422);
+        }
+
+        // إرجاع البيانات المهيكلة بالكامل للواجهة الأمامية لملء الحقول تلقائياً أمام المستخدم!
+        return response()->json($extractedTask);
     }
 }

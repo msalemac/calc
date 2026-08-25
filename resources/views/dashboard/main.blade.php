@@ -31,56 +31,24 @@
     </script>
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        
-        /* التنسيق الافتراضي للتقويم في الوضع العادي */
-        .fc-theme-standard td, .fc-theme-standard th { border-color: #e2e8f0 !important; }
+        .fc-theme-standard td, .fc-theme-standard th { border-color: #334155 !important; }
         .fc-event { border: none !important; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
         .fc-daygrid-day-number, .fc-col-header-cell-cushion { text-decoration: none !important; color: #1e293b !important; }
-
-        /* تخصيص مظهر Flatpickr ليتناسب تماماً مع ألواننا الداكنة والزاهية */
         .flatpickr-calendar { background: #0f172a !important; border: 1px solid #1e293b !important; border-radius: 16px !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5) !important; }
         .flatpickr-day.selected { background: #4f46e5 !important; border-color: #4f46e5 !important; }
-
-        /* ==================================================== */
-        /* تخصيص مظهر التقويم الاحترافي بالكامل في الوضع الليلي (Dark Mode) */
-        /* ==================================================== */
-        .dark .fc {
-            color: #f8fafc !important; /* لون النص الأساسي أبيض ثلجي */
-        }
-        .dark .fc-col-header-cell-cushion, 
-        .dark .fc-daygrid-day-number,
-        .dark .fc-daygrid-day-top {
-            color: #cbd5e1 !important; /* أرقام الأيام وأسماء الأسبوع بلون فضي ناصع مريح للعين */
-            text-decoration: none !important;
-        }
-        .dark .fc-button {
-            background-color: #1e293b !important; /* أزرار التقويم بلون كحلي داكن متناسق مع بطاقاتنا */
-            border-color: #334155 !important;
-            color: #f8fafc !important;
-            text-transform: capitalize;
-        }
-        .dark .fc-button-active {
-            background-color: #4f46e5 !important; /* زر اليوم الحالي النشط باللون البنفسجي الزاهي */
-            border-color: #4f46e5 !important;
-        }
-        .dark .fc-theme-standard td, 
-        .dark .fc-theme-standard th {
-            border-color: #1e293b !important; /* تفتيح وتبسيط حدود شبكة التقويم بلون هادئ */
-        }
-        .dark .fc-day-today {
-            background-color: rgba(79, 70, 229, 0.15) !important; /* تظليل ناعم لليوم الحالي باللون البنفسجي */
-        }
-        .dark .fc-daygrid-day:hover {
-            background-color: rgba(255, 255, 255, 0.02) !important; /* تأثير تمرير خفيف جداً فوق الأيام */
-        }
+        .dark .fc { color: #f8fafc !important; }
+        .dark .fc-col-header-cell-cushion, .dark .fc-daygrid-day-number, .dark .fc-daygrid-day-top { color: #cbd5e1 !important; text-decoration: none !important; }
+        .dark .fc-button { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; text-transform: capitalize; }
+        .dark .fc-button-active { background-color: #4f46e5 !important; border-color: #4f46e5 !important; }
+        .dark .fc-theme-standard td, .dark .fc-theme-standard th { border-color: #1e293b !important; }
+        .dark .fc-day-today { background-color: rgba(79, 70, 229, 0.15) !important; }
+        .dark .fc-daygrid-day:hover { background-color: rgba(255, 255, 255, 0.02) !important; }
     </style>
 </head>
-<!-- دمج متغير detailModal لفتح وإغلاق نافذة تفاصيل كروت التقويم -->
 <body x-data="{ darkMode: true, taskModal: false, profileModal: false, detailModal: false, activeTab: 'tasks', selectedTask: {} }" :class="darkMode ? 'dark' : ''" class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300">
 
     <div class="flex h-screen overflow-hidden">
         
-        <!-- الشريط الجانبي (Sidebar) متجاوب تماماً -->
         <aside class="w-64 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between p-6 hidden md:flex transition-colors duration-300">
             <div>
                 <div class="flex items-center gap-3 mb-8">
@@ -117,7 +85,6 @@
             </div>
         </aside>
 
-        <!-- منطقة العمل الرئيسية -->
         <main class="flex-1 flex flex-col overflow-hidden">
             
             <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between transition-colors duration-300">
@@ -162,7 +129,6 @@
                     </div>
                 </div>
 
-                <!-- تبويب المهام اليومية -->
                 <div x-show="activeTab === 'tasks'" class="space-y-4">
                     <div class="flex items-center justify-between">
                         <h3 class="font-extrabold text-md text-slate-900 dark:text-white">قائمة المهام والجدول اليومي</h3>
@@ -194,23 +160,18 @@
                                         </div>
                                         
                                         <div class="flex items-center gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <!-- زر التأجيل الذكي (سهم أصفر ملتف للأمام) لليوم التالي -->
                                             <a href="{{ route('tasks.postpone', $task->id) }}" class="w-7 h-7 bg-amber-500/10 hover:bg-amber-500 text-amber-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="تأجيل المهمة للغد">
                                                 <i class="ri-arrow-go-forward-line text-xs"></i>
                                             </a>
-                                            <!-- زر التعديل (Edit) -->
                                             <button onclick="editTask({{ $task->id }})" class="w-7 h-7 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="تعديل المهمة">
                                                 <i class="ri-edit-line text-xs"></i>
                                             </button>
-                                            <!-- زر الطباعة / تصدير PDF للمهمة -->
                                             <button onclick="printTask('{{ $task->title }}', '{{ $task->description }}')" class="w-7 h-7 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="طباعة / تصدير PDF">
                                                 <i class="ri-printer-line text-xs"></i>
                                             </button>
-                                            <!-- زر مشاركة المهمة (Share API) لفتح الـ WhatsApp أو غيره -->
                                             <button onclick="shareTask('{{ $task->title }}', '{{ $task->description }}')" class="w-7 h-7 bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="مشاركة المهمة">
                                                 <i class="ri-share-line text-xs"></i>
                                             </button>
-                                            <!-- زر الحذف السريع والآمن (Delete) -->
                                             <button onclick="deleteTask({{ $task->id }})" class="w-7 h-7 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg flex items-center justify-center transition-all" title="حذف المهمة">
                                                 <i class="ri-delete-bin-line text-xs"></i>
                                             </button>
@@ -222,7 +183,6 @@
                     @endif
                 </div>
 
-                <!-- تبويب التقويم مضاف إليه حدث الضغط التفاعلي لعرض التفاصيل -->
                 <div x-show="activeTab === 'calendar'" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 transition-colors duration-300" x-init="
                     setTimeout(() => {
                         var calendarEl = document.getElementById('calendar');
@@ -239,16 +199,14 @@
                                     title: '{{ $task->title }}',
                                     start: '{{ $task->due_date->format('Y-m-d\TH:i:s') }}',
                                     backgroundColor: '{{ $task->category->color_code ?? '#3B82F6' }}',
-                                    // تمرير الخصائص الممتدة للذكاء الاصطناعي والواجهة لقراءتها عند الضغط
                                     extendedProps: {
-                                        description: '{{ addslashes(str_replace(["\r", "\n"], ' ', $task->description)) }}',
+                                        description: '{{ addslashes(str_replace(["\r", "\n"], " ", $task->description)) }}',
                                         priority: '{{ $task->priority }}',
-                                        due_date: '{{ $task->due_date->format('Y/m/d h:i A') }}'
+                                        due_date: '{{ $task->due_date->format("Y/m/d h:i A") }}'
                                     }
                                 },
                                 @endforeach
                             ],
-                            // برمجة تفاعلية الضغط على الحدث لفتح نافذة التفاصيل الفورية لتقويم الأدمن والطلاب
                             eventClick: function(info) {
                                 selectedTask = {
                                     id: info.event.id,
@@ -288,7 +246,8 @@
                     <label class="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-1">عنوان المهمة الأساسي</label>
                     <div class="relative">
                         <input type="text" name="title" required placeholder="مثال: مراجعة ميزانية الربع الأول" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none text-slate-900 dark:text-white">
-                        <button type="button" class="absolute left-3 top-3 text-slate-400 hover:text-indigo-500 transition-colors">
+                        <!-- ربط زر الميكروفون بـ ID ودالة التشغيل تفاعلياً -->
+                        <button type="button" id="micBtn" onclick="toggleRecording()" class="absolute left-3 top-3 text-slate-400 hover:text-indigo-500 transition-colors" title="إدخال المهمة بصوتك عبر الذكاء الاصطناعي">
                             <i class="ri-mic-line text-lg"></i>
                         </button>
                     </div>
@@ -371,7 +330,7 @@
         </div>
     </div>
 
-    <!-- نافذة إعدادات الملف الشخصي وتغيير الباسورد المنبثقة التفاعلية الفخمة -->
+    <!-- نافذة إعدادات الملف الشخصي وتغيير الباسورد -->
     <div x-show="profileModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" x-transition>
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-right">
             
@@ -452,7 +411,6 @@
                 <button @click="detailModal = false" class="text-slate-400 hover:text-slate-500"><i class="ri-close-line text-2xl"></i></button>
             </div>
 
-            <!-- عرض تفاصيل المهمة ديناميكياً بناءً على ما نقر عليه المستخدم في التقويم -->
             <div class="space-y-4 mb-6">
                 <div>
                     <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500" x-text="selectedTask.priority"></span>
@@ -468,16 +426,13 @@
                 </div>
             </div>
 
-            <!-- الإجراءات المتاحة للمهمة من داخل التقويم المطور -->
             <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                <!-- زر الحذف المباشر من التقويم -->
                 <button @click="detailModal = false; deleteTask(selectedTask.id);" class="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all">
                     <i class="ri-delete-bin-line"></i> حذف المهمة
                 </button>
                 
                 <div class="flex items-center gap-2">
                     <button @click="detailModal = false" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-xs hover:bg-slate-200 transition-all">إغلاق</button>
-                    <!-- زر التعديل المباشر من التقويم -->
                     <button @click="detailModal = false; editTask(selectedTask.id);" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-600/15 transition-all">تعديل التفاصيل <i class="ri-edit-line mr-1"></i></button>
                 </div>
             </div>
@@ -485,7 +440,7 @@
         </div>
     </div>
 
-    <!-- كود الجافا سكريبت لتفعيل Flatpickr وأزرار المتابعة والطباعة والمشاركة الذكية -->
+    <!-- كود الجافا سكريبت لتفعيل Flatpickr والتسجيل الصوتي والمشاركة والطباعة -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             flatpickr("#due_date_input", {
@@ -499,6 +454,104 @@
             });
         });
 
+        // ====================================================
+        // برمجة التقاط وتسجيل الصوت وإرساله لـ Whisper للترجمة الذكية (AI Voice-to-Task)
+        // ====================================================
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        async function toggleRecording() {
+            const micBtn = document.getElementById('micBtn');
+            const micIcon = micBtn.querySelector('i');
+
+            if (!isRecording) {
+                // بدء عملية تسجيل الصوت من الميكروفون
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await uploadAudio(audioBlob);
+                        
+                        // تحرير ميكروفون المستخدم فور الانتهاء من التسجيل لخصوصية تامة
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    
+                    // تحويل شكل ولون الأيقونة لنبضات حمراء تدل على التسجيل النشط
+                    micIcon.className = 'ri-mic-fill text-red-500 animate-pulse';
+                    micBtn.title = 'انقر مجدداً للتوقف والمعالجة بالذكاء الاصطناعي';
+                } catch (err) {
+                    alert('يرجى إعطاء صلاحية استخدام الميكروفون للمتصفح لتتمكن من استخدام ميزة الإدخال الصوتي الذكي!');
+                    console.error(err);
+                }
+            } else {
+                // إيقاف التسجيل وإرسال الملف الفوري للسيرفر
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                // تحويل الأيقونة لمؤشر دوران أزرق يدل على معالجة السيرفر الذكية بالخلفية
+                micIcon.className = 'ri-loader-4-line text-indigo-500 animate-spin';
+                micBtn.disabled = true;
+            }
+        }
+
+        async function uploadAudio(blob) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.webm');
+            formData.append('_token', '{{ csrf_token() }}');
+
+            try {
+                // رفع الملف الصوتي لـ TaskController@transcribeVoice
+                const response = await fetch('{{ route("tasks.voice") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // ملء حقول الإدخال سحرياً بالبيانات المستخلصة المهيكلة من الذكاء الاصطناعي!
+                    document.getElementsByName('title')[0].value = result.title || '';
+                    document.getElementsByName('description')[0].value = result.description || '';
+                    document.getElementsByName('priority')[0].value = result.priority || 'medium';
+                    document.getElementsByName('estimated_duration')[0].value = result.estimated_duration || 30;
+
+                    // تعبئة حقول الأدوار المخصصة الإضافية تلقائياً إن نجح الـ AI في استخلاصها
+                    if (result.custom_fields) {
+                        for (const [key, value] of Object.entries(result.custom_fields)) {
+                            const input = document.getElementsByName(`custom_fields[${key}]`)[0];
+                            if (input) input.value = value;
+                        }
+                    }
+                    
+                    alert('رائع! نجح المساعد الذكي في ترجمة صوتك وتعبئة حقول المهمة تلقائياً بنجاح.');
+                } else {
+                    alert('فشل استخلاص البيانات: ' + (result.message || 'يرجى التحدث بصوت أوضح وقريب من الميكروفون.'));
+                }
+            } catch (error) {
+                alert('حدث خطأ فني أثناء معالجة ورفع الصوت للسيرفر، يرجى المحاولة لاحقاً.');
+                console.error(error);
+            } finally {
+                // إعادة الأيقونة لشكل الميكروفون الافتراضي وتحرير الزر
+                const micBtn = document.getElementById('micBtn');
+                const micIcon = micBtn.querySelector('i');
+                micIcon.className = 'ri-mic-line';
+                micBtn.disabled = false;
+                micBtn.title = 'إدخال المهمة بصوتك عبر الذكاء الاصطناعي';
+            }
+        }
+
+        // ميزة طباعة وتصدير المهمة الفردية المنسقة
         function printTask(title, description) {
             var printWindow = window.open('', '_blank');
             printWindow.document.write('<html lang="ar" dir="rtl"><head><title>طباعة مهمة</title>');
@@ -512,6 +565,7 @@
             }, 500);
         }
 
+        // ميزة مشاركة تفاصيل المهمة عبر الهواتف والكمبيوتر (Web Share API)
         function shareTask(title, description) {
             var text = 'المهمة الذكية: ' + title + '\nالتفاصيل: ' + (description ? description : 'لا توجد تفاصيل إضافية.');
             

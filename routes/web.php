@@ -5,7 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TaskController;
 
-// تحويل الصفحة الرئيسية تلقائياً إلى لوحة التحكم
+// توجيه رابط الموقع الرئيسي تلقائياً إلى لوحة التحكم
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
@@ -41,5 +41,8 @@ Route::middleware(['auth'])->group(function () {
 
     // رابط تحديث بيانات الملف الشخصي للمستخدم وتغيير كلمة المرور بأمان عالي
     Route::post('/profile/update', [AuthController::class, 'updateProfile'])->name('profile.update');
+
+    // رابط استقبال ومعالجة الصوت واستخلاص المهام عبر الذكاء الاصطناعي (Whisper & GPT)
+    Route::post('/tasks/voice', [TaskController::class, 'transcribeVoice'])->name('tasks.voice');
     
 });
